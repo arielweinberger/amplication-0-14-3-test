@@ -27,9 +27,6 @@ import { OrderWhereUniqueInput } from "./OrderWhereUniqueInput";
 import { OrderFindManyArgs } from "./OrderFindManyArgs";
 import { OrderUpdateInput } from "./OrderUpdateInput";
 import { Order } from "./Order";
-import { RecipeFindManyArgs } from "../../recipe/base/RecipeFindManyArgs";
-import { Recipe } from "../../recipe/base/Recipe";
-import { RecipeWhereUniqueInput } from "../../recipe/base/RecipeWhereUniqueInput";
 @swagger.ApiBearerAuth()
 @common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
 export class OrderControllerBase {
@@ -49,11 +46,40 @@ export class OrderControllerBase {
   @swagger.ApiForbiddenResponse({ type: errors.ForbiddenException })
   async create(@common.Body() data: OrderCreateInput): Promise<Order> {
     return await this.service.create({
-      data: data,
+      data: {
+        ...data,
+
+        customer: data.customer
+          ? {
+              connect: data.customer,
+            }
+          : undefined,
+
+        product: data.product
+          ? {
+              connect: data.product,
+            }
+          : undefined,
+      },
       select: {
-        createdAt: true,
         id: true,
+        createdAt: true,
         updatedAt: true,
+        quantity: true,
+        discount: true,
+        totalPrice: true,
+
+        customer: {
+          select: {
+            id: true,
+          },
+        },
+
+        product: {
+          select: {
+            id: true,
+          },
+        },
       },
     });
   }
@@ -73,9 +99,24 @@ export class OrderControllerBase {
     return this.service.findMany({
       ...args,
       select: {
-        createdAt: true,
         id: true,
+        createdAt: true,
         updatedAt: true,
+        quantity: true,
+        discount: true,
+        totalPrice: true,
+
+        customer: {
+          select: {
+            id: true,
+          },
+        },
+
+        product: {
+          select: {
+            id: true,
+          },
+        },
       },
     });
   }
@@ -96,9 +137,24 @@ export class OrderControllerBase {
     const result = await this.service.findOne({
       where: params,
       select: {
-        createdAt: true,
         id: true,
+        createdAt: true,
         updatedAt: true,
+        quantity: true,
+        discount: true,
+        totalPrice: true,
+
+        customer: {
+          select: {
+            id: true,
+          },
+        },
+
+        product: {
+          select: {
+            id: true,
+          },
+        },
       },
     });
     if (result === null) {
@@ -126,11 +182,40 @@ export class OrderControllerBase {
     try {
       return await this.service.update({
         where: params,
-        data: data,
+        data: {
+          ...data,
+
+          customer: data.customer
+            ? {
+                connect: data.customer,
+              }
+            : undefined,
+
+          product: data.product
+            ? {
+                connect: data.product,
+              }
+            : undefined,
+        },
         select: {
-          createdAt: true,
           id: true,
+          createdAt: true,
           updatedAt: true,
+          quantity: true,
+          discount: true,
+          totalPrice: true,
+
+          customer: {
+            select: {
+              id: true,
+            },
+          },
+
+          product: {
+            select: {
+              id: true,
+            },
+          },
         },
       });
     } catch (error) {
@@ -159,9 +244,24 @@ export class OrderControllerBase {
       return await this.service.delete({
         where: params,
         select: {
-          createdAt: true,
           id: true,
+          createdAt: true,
           updatedAt: true,
+          quantity: true,
+          discount: true,
+          totalPrice: true,
+
+          customer: {
+            select: {
+              id: true,
+            },
+          },
+
+          product: {
+            select: {
+              id: true,
+            },
+          },
         },
       });
     } catch (error) {
@@ -172,108 +272,5 @@ export class OrderControllerBase {
       }
       throw error;
     }
-  }
-
-  @common.UseInterceptors(AclFilterResponseInterceptor)
-  @nestAccessControl.UseRoles({
-    resource: "Recipe",
-    action: "read",
-    possession: "any",
-  })
-  @common.Get("/:id/recipes")
-  @ApiNestedQuery(RecipeFindManyArgs)
-  async findManyRecipes(
-    @common.Req() request: Request,
-    @common.Param() params: OrderWhereUniqueInput
-  ): Promise<Recipe[]> {
-    const query = plainToClass(RecipeFindManyArgs, request.query);
-    const results = await this.service.findRecipes(params.id, {
-      ...query,
-      select: {
-        createdAt: true,
-        id: true,
-        name: true,
-
-        order: {
-          select: {
-            id: true,
-          },
-        },
-
-        updatedAt: true,
-      },
-    });
-    if (results === null) {
-      throw new errors.NotFoundException(
-        `No resource was found for ${JSON.stringify(params)}`
-      );
-    }
-    return results;
-  }
-
-  @nestAccessControl.UseRoles({
-    resource: "Order",
-    action: "update",
-    possession: "any",
-  })
-  @common.Post("/:id/recipes")
-  async connectRecipes(
-    @common.Param() params: OrderWhereUniqueInput,
-    @common.Body() body: RecipeWhereUniqueInput[]
-  ): Promise<void> {
-    const data = {
-      recipes: {
-        connect: body,
-      },
-    };
-    await this.service.update({
-      where: params,
-      data,
-      select: { id: true },
-    });
-  }
-
-  @nestAccessControl.UseRoles({
-    resource: "Order",
-    action: "update",
-    possession: "any",
-  })
-  @common.Patch("/:id/recipes")
-  async updateRecipes(
-    @common.Param() params: OrderWhereUniqueInput,
-    @common.Body() body: RecipeWhereUniqueInput[]
-  ): Promise<void> {
-    const data = {
-      recipes: {
-        set: body,
-      },
-    };
-    await this.service.update({
-      where: params,
-      data,
-      select: { id: true },
-    });
-  }
-
-  @nestAccessControl.UseRoles({
-    resource: "Order",
-    action: "update",
-    possession: "any",
-  })
-  @common.Delete("/:id/recipes")
-  async disconnectRecipes(
-    @common.Param() params: OrderWhereUniqueInput,
-    @common.Body() body: RecipeWhereUniqueInput[]
-  ): Promise<void> {
-    const data = {
-      recipes: {
-        disconnect: body,
-      },
-    };
-    await this.service.update({
-      where: params,
-      data,
-      select: { id: true },
-    });
   }
 }
