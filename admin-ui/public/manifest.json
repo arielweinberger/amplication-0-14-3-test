@@ -1,6 +1,6 @@
 {
-  "short_name": "pizzashop-backoffice",
-  "name": "pizzashop-backoffice",
+  "short_name": "Sample app",
+  "name": "Sample app",
   "icons": [
     {
       "src": "favicon.ico",

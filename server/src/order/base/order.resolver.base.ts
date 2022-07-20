@@ -25,8 +25,8 @@ import { DeleteOrderArgs } from "./DeleteOrderArgs";
 import { OrderFindManyArgs } from "./OrderFindManyArgs";
 import { OrderFindUniqueArgs } from "./OrderFindUniqueArgs";
 import { Order } from "./Order";
-import { RecipeFindManyArgs } from "../../recipe/base/RecipeFindManyArgs";
-import { Recipe } from "../../recipe/base/Recipe";
+import { Customer } from "../../customer/base/Customer";
+import { Product } from "../../product/base/Product";
 import { OrderService } from "../order.service";
 
 @graphql.Resolver(() => Order)
@@ -94,7 +94,21 @@ export class OrderResolverBase {
   async createOrder(@graphql.Args() args: CreateOrderArgs): Promise<Order> {
     return await this.service.create({
       ...args,
-      data: args.data,
+      data: {
+        ...args.data,
+
+        customer: args.data.customer
+          ? {
+              connect: args.data.customer,
+            }
+          : undefined,
+
+        product: args.data.product
+          ? {
+              connect: args.data.product,
+            }
+          : undefined,
+      },
     });
   }
 
@@ -111,7 +125,21 @@ export class OrderResolverBase {
     try {
       return await this.service.update({
         ...args,
-        data: args.data,
+        data: {
+          ...args.data,
+
+          customer: args.data.customer
+            ? {
+                connect: args.data.customer,
+              }
+            : undefined,
+
+          product: args.data.product
+            ? {
+                connect: args.data.product,
+              }
+            : undefined,
+        },
       });
     } catch (error) {
       if (isRecordNotFoundError(error)) {
@@ -145,22 +173,34 @@ export class OrderResolverBase {
   }
 
   @common.UseInterceptors(AclFilterResponseInterceptor)
-  @graphql.ResolveField(() => [Recipe])
+  @graphql.ResolveField(() => Customer, { nullable: true })
   @nestAccessControl.UseRoles({
-    resource: "Recipe",
+    resource: "Customer",
     action: "read",
     possession: "any",
   })
-  async recipes(
-    @graphql.Parent() parent: Order,
-    @graphql.Args() args: RecipeFindManyArgs
-  ): Promise<Recipe[]> {
-    const results = await this.service.findRecipes(parent.id, args);
+  async customer(@graphql.Parent() parent: Order): Promise<Customer | null> {
+    const result = await this.service.getCustomer(parent.id);
 
-    if (!results) {
-      return [];
+    if (!result) {
+      return null;
     }
+    return result;
+  }
 
-    return results;
+  @common.UseInterceptors(AclFilterResponseInterceptor)
+  @graphql.ResolveField(() => Product, { nullable: true })
+  @nestAccessControl.UseRoles({
+    resource: "Product",
+    action: "read",
+    possession: "any",
+  })
+  async product(@graphql.Parent() parent: Order): Promise<Product | null> {
+    const result = await this.service.getProduct(parent.id);
+
+    if (!result) {
+      return null;
+    }
+    return result;
   }
 }
