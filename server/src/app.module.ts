@@ -2,9 +2,6 @@ import { Module, Scope } from "@nestjs/common";
 import { APP_INTERCEPTOR } from "@nestjs/core";
 import { MorganInterceptor, MorganModule } from "nest-morgan";
 import { UserModule } from "./user/user.module";
-import { IngredientModule } from "./ingredient/ingredient.module";
-import { RecipeModule } from "./recipe/recipe.module";
-import { OrderModule } from "./order/order.module";
 import { ACLModule } from "./auth/acl.module";
 import { AuthModule } from "./auth/auth.module";
 import { HealthModule } from "./health/health.module";
@@ -18,9 +15,6 @@ import { GraphQLModule } from "@nestjs/graphql";
   controllers: [],
   imports: [
     UserModule,
-    IngredientModule,
-    RecipeModule,
-    OrderModule,
     ACLModule,
     AuthModule,
     HealthModule,
