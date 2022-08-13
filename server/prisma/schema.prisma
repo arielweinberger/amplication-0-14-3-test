@@ -8,39 +8,13 @@ generator client {
 }
 
 model User {
-  createdAt DateTime @default(now())
-  firstName String?
   id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  firstName String?
   lastName  String?
+  username  String   @unique
   password  String
   roles     String[]
-  updatedAt DateTime @updatedAt
-  username  String   @unique
-}
-
-model Ingredient {
-  createdAt     DateTime @default(now())
-  id            String   @id @default(cuid())
-  name          String?
-  recipe        Recipe?  @relation(fields: [recipeId], references: [id])
-  recipeId      String?
-  stockQuantity Int?
-  updatedAt     DateTime @updatedAt
-}
-
-model Recipe {
-  createdAt   DateTime     @default(now())
-  id          String       @id @default(cuid())
-  ingredients Ingredient[]
-  name        String?
-  order       Order?       @relation(fields: [orderId], references: [id])
-  orderId     String?
-  updatedAt   DateTime     @updatedAt
-}
-
-model Order {
-  createdAt DateTime @default(now())
-  id        String   @id @default(cuid())
-  recipes   Recipe[]
-  updatedAt DateTime @updatedAt
+  jjj       String?
 }
